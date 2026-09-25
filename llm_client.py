@@ -8,8 +8,20 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
-all_models = [m.id for m in client.models.list().data]
-MODEL_NAME = all_models[0] if all_models else "llama-3.1-8b-instant"
+def get_valid_chat_model():
+    try:
+        models = [m.id for m in client.models.list().data]
+        excluded = ["whisper", "guard", "vision", "embed", "safetensors"]
+        chat_models = [m for m in models if not any(e in m.lower() for e in excluded)]
+        
+        for m in chat_models:
+            if "llama-3.1-8b-instant" in m:
+                return m
+        return chat_models[0] if chat_models else "llama-3.1-8b-instant"
+    except Exception:
+        return "llama-3.1-8b-instant"
+
+MODEL_NAME = get_valid_chat_model()
 
 SYSTEM_PROMPT = """
 You are QueryForge, an expert Text-to-SQL AI engine.
